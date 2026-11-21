@@ -186,7 +186,18 @@ class Agent:
 
     def pick(self, state, grid):
         """Return the optimal step from a state."""
-        ...
+        if self.training_method == "value":
+            a_max = [0, 0]
+            expect_max = -float("inf")
+            for a in ACTIONS:
+                expect = sum(
+                    prob(grid, state, a, RATE)[s] * self.value[s]
+                    for s in range(WIDTH * HEIGHT)
+                )
+                if expect > expect_max:
+                    expect_max = expect
+                    a_max = a
+        return a_max
 
     def play(self, state, grid):
         """Take actions from state until the end.
@@ -197,7 +208,7 @@ def main():
     grid = create_grid(WIDTH, HEIGHT, WALLS)
     agent = Agent("value")
     agent.train(grid)
-    print(agent.value)
+    print(agent.pick([0, 0], grid))
 
 
 if __name__ == "__main__":
