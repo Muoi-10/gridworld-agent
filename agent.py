@@ -2,9 +2,10 @@ import random
 
 WIDTH = 4
 HEIGHT = 3
-WALLS = [[0, 1]]
+WALLS = [(1, 1)]
 RATE = 0.8
-INITIAL_STATE = [0, 0]
+GAMMA = 0.99
+ACTIONS = [[0, 1], [0, -1], [1, 0], [-1, 0]]
 
 
 def create_grid(width, height, walls):
@@ -122,7 +123,7 @@ def num_to_state(num):
 def prob(grid, state, action, rate):
     """Return the probability distribution of new states after performing action at state"""
 
-    p = dict()
+    p = {i: 0 for i in range(WIDTH * HEIGHT)}
     p[state_to_num(state)] = 0
     new_row = state[0] + action[0]
     new_col = state[1] + action[1]
@@ -162,12 +163,23 @@ def prob(grid, state, action, rate):
 class Agent:
     def __init__(self, training_method):
         self.training_method = training_method
-        self.policy = [[None for _ in range(WIDTH)] for _ in range(HEIGHT)]
+        self.policy = [None for _ in range(WIDTH * HEIGHT)]
 
     def train(self, grid):
         if self.training_method == "value":
             # Perform value iteration
-            self.value = [[0 for _ in range(WIDTH)] for _ in range(HEIGHT)]
+            self.value = [0 for _ in range(WIDTH * HEIGHT)]
+            for _ in range(1000):
+                for s in range(WIDTH * HEIGHT):
+                    if not is_wall(grid, num_to_state(s)):
+                        self.value[s] = get_reward(num_to_state(s), grid) + GAMMA * max(
+                            sum(
+                                prob(grid, num_to_state(s), a, RATE)[s_2]
+                                * self.value[s_2]
+                                for s_2 in range(WIDTH * HEIGHT)
+                            )
+                            for a in ACTIONS
+                        )
         elif self.training_method == "policy":
             # Perform policy iteration
             ...
@@ -183,12 +195,9 @@ class Agent:
 
 def main():
     grid = create_grid(WIDTH, HEIGHT, WALLS)
-    agent_1 = Agent("value")
-    agent_2 = Agent("policy")
-    agent_1.train(grid)
-    agent_2.train(grid)
-    agent_1.play(INITIAL_STATE, grid)
-    agent_2.play(INITIAL_STATE, grid)
+    agent = Agent("value")
+    agent.train(grid)
+    print(agent.value)
 
 
 if __name__ == "__main__":
