@@ -81,14 +81,20 @@ def take_action(grid, state, action, rate):
         return take_action(grid, state, action, 1)
 
 
-def get_reward(state, walls):
+def get_reward(state, grid):
     """Return reward of a state: R(S)"""
-    if state in walls:
-        ...
+    if is_wall(grid, state):
+        return None
+    if state == [0, 3]:
+        return 1
+    if state == [1, 3]:
+        return -1
+    return -0.04
 
 
 def main():
     grid = create_grid(WIDTH, HEIGHT, WALLS)
+    print(get_reward([0, 3], grid))
 
 
 if __name__ == "__main__":
