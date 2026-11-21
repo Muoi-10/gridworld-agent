@@ -105,6 +105,60 @@ def value_iteration(grid):
     ...
 
 
+# Should've represented states as integers from the start
+def state_to_num(state):
+    num = state[0] * WIDTH + state[1]
+    return num
+
+
+def num_to_state(num):
+    state = [0, 0]
+    state[0] = num // WIDTH
+    state[1] = num % WIDTH
+    return state
+
+
+# Should've done this before take_action function because take_action can utilize this function
+def prob(grid, state, action, rate):
+    """Return the probability distribution of new states after performing action at state"""
+
+    p = dict()
+    p[state_to_num(state)] = 0
+    new_row = state[0] + action[0]
+    new_col = state[1] + action[1]
+    new_state = [new_row, new_col]
+    if not is_wall(grid, new_state):
+        p[state_to_num(new_state)] = rate
+    else:
+        p[state_to_num(state)] += rate
+
+    if action[0] == 0:
+        new_row = state[0] + 1
+        new_row_2 = state[0] - 1
+        if not is_wall(grid, [new_row, state[1]]):
+            p[state_to_num([new_row, state[1]])] = (1 - rate) / 2
+        else:
+            p[state_to_num(state)] += (1 - rate) / 2
+        if not is_wall(grid, [new_row_2, state[1]]):
+            p[state_to_num([new_row_2, state[1]])] = (1 - rate) / 2
+        else:
+            p[state_to_num(state)] += (1 - rate) / 2
+
+    elif action[1] == 0:
+        new_col = state[1] + 1
+        new_col_2 = state[1] - 1
+        if not is_wall(grid, [state[0], new_col]):
+            p[state_to_num([state[0], new_col])] = (1 - rate) / 2
+        else:
+            p[state_to_num(state)] += (1 - rate) / 2
+        if not is_wall(grid, [state[0], new_col_2]):
+            p[state_to_num([state[0], new_col_2])] = (1 - rate) / 2
+        else:
+            p[state_to_num(state)] += (1 - rate) / 2
+
+    return p
+
+
 class Agent:
     def __init__(self, training_method):
         self.training_method = training_method
@@ -113,7 +167,7 @@ class Agent:
     def train(self, grid):
         if self.training_method == "value":
             # Perform value iteration
-            ...
+            self.value = [[0 for _ in range(WIDTH)] for _ in range(HEIGHT)]
         elif self.training_method == "policy":
             # Perform policy iteration
             ...
