@@ -4,6 +4,7 @@ WIDTH = 4
 HEIGHT = 3
 WALLS = [[0, 1]]
 RATE = 0.8
+INITIAL_STATE = [0, 0]
 
 
 def create_grid(width, height, walls):
@@ -92,9 +93,48 @@ def get_reward(state, grid):
     return -0.04
 
 
+def policy_iteration(grid):
+    """Train an agent by policy iteration
+    Return policy pi"""
+    ...
+
+
+def value_iteration(grid):
+    """Train an agent using value iteration
+    Return policy pi"""
+    ...
+
+
+class Agent:
+    def __init__(self, training_method):
+        self.training_method = training_method
+        self.policy = [[None for _ in range(WIDTH)] for _ in range(HEIGHT)]
+
+    def train(self, grid):
+        if self.training_method == "value":
+            # Perform value iteration
+            ...
+        elif self.training_method == "policy":
+            # Perform policy iteration
+            ...
+
+    def pick(self, state, grid):
+        """Return the optimal step from a state."""
+        ...
+
+    def play(self, state, grid):
+        """Take actions from state until the end.
+        Return the sequence from state to the end state"""
+
+
 def main():
     grid = create_grid(WIDTH, HEIGHT, WALLS)
-    print(get_reward([0, 3], grid))
+    agent_1 = Agent("value")
+    agent_2 = Agent("policy")
+    agent_1.train(grid)
+    agent_2.train(grid)
+    agent_1.play(INITIAL_STATE, grid)
+    agent_2.play(INITIAL_STATE, grid)
 
 
 if __name__ == "__main__":
