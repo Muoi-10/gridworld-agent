@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 WIDTH = 4
 HEIGHT = 3
@@ -64,23 +65,25 @@ def take_action(grid, state, action, rate):
 
     elif i >= rate and i < (rate + 1) / 2:
         # Perform the perpendicular to one way
+        new_action = [0, 0]
         if action[0] == 0:
-            action[0] = 1
-            action[1] = 0
+            new_action[0] = 1
+            new_action[1] = 0
         else:
-            action[0] = 0
-            action[1] = 1
-        return take_action(grid, state, action, 1)
+            new_action[0] = 0
+            new_action[1] = 1
+        return take_action(grid, state, new_action, 1)
 
     else:
         # Perform the perpendicular action to another way
+        new_action = [0, 0]
         if action[0] == 0:
-            action[0] = -1
-            action[1] = 0
+            new_action[0] = -1
+            new_action[1] = 0
         else:
-            action[0] = 0
-            action[1] = -1
-        return take_action(grid, state, action, 1)
+            new_action[0] = 0
+            new_action[1] = -1
+        return take_action(grid, state, new_action, 1)
 
 
 def get_reward(state, grid):
@@ -92,18 +95,6 @@ def get_reward(state, grid):
     if state == [1, 3]:
         return -1
     return -0.04
-
-
-def policy_iteration(grid):
-    """Train an agent by policy iteration
-    Return policy pi"""
-    ...
-
-
-def value_iteration(grid):
-    """Train an agent using value iteration
-    Return policy pi"""
-    ...
 
 
 # Should've represented states as integers from the start
@@ -163,7 +154,6 @@ def prob(grid, state, action, rate):
 class Agent:
     def __init__(self, training_method):
         self.training_method = training_method
-        self.policy = [None for _ in range(WIDTH * HEIGHT)]
 
     def train(self, grid):
         if self.training_method == "value":
@@ -182,7 +172,27 @@ class Agent:
                         )
         elif self.training_method == "policy":
             # Perform policy iteration
-            ...
+            self.policy = [random.choice(ACTIONS) for _ in range(WIDTH * HEIGHT)]
+            self.training_method = "value"
+            for _ in range(1000):
+                p_pi = np.array(
+                    [
+                        list(prob(grid, num_to_state(s), self.policy[s], RATE).values())
+                        for s in range(WIDTH * HEIGHT)
+                    ]
+                )
+                r = np.array(
+                    [get_reward(num_to_state(s), grid) for s in range(WIDTH * HEIGHT)]
+                )
+                r[5] = 0
+                self.value = (
+                    np.linalg.inv((np.identity(WIDTH * HEIGHT) - GAMMA * p_pi)) @ r
+                )
+                for s in range(WIDTH * HEIGHT):
+                    if not is_wall(grid, num_to_state(s)):
+                        self.policy[s] = self.pick(num_to_state(s), grid)
+
+            self.training_method = "policy"
 
     def pick(self, state, grid):
         """Return the optimal step from a state."""
@@ -197,18 +207,25 @@ class Agent:
                 if expect > expect_max:
                     expect_max = expect
                     a_max = a
-        return a_max
+            return a_max
+        elif self.training_method == "policy":
+            return self.policy[state_to_num(state)]
 
-    def play(self, state, grid):
-        """Take actions from state until the end.
-        Return the sequence from state to the end state"""
+    def play(self, state, grid, steps):
+        """Take n consecutive actions from initial state.
+        Return the sequence from initial state to the last state"""
+        states = [state]
+        for _ in range(steps):
+            state = take_action(grid, state, self.pick(state, grid), RATE)
+            states.append(state)
+        return states
 
 
 def main():
     grid = create_grid(WIDTH, HEIGHT, WALLS)
-    agent = Agent("value")
+    agent = Agent("policy")
     agent.train(grid)
-    print(agent.pick([0, 0], grid))
+    print(agent.play([0, 0], grid, 10))
 
 
 if __name__ == "__main__":
